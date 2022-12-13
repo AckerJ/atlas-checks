@@ -1,6 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer
-
 plugins {
 	id 'java'
 	id 'maven'
@@ -47,14 +44,6 @@ repositories
 
 configurations
 {
-    all {
-        resolutionStrategy {
-            // Force the version compatible with the latest version
-            // of Spark brought in by atlas generator
-            force 'com.fasterxml.jackson.core:jackson-core:2.10.0'
-            force 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
-        }
-    }
     compile
     {
         resolutionStrategy
@@ -67,7 +56,7 @@ configurations
             force 'org.xerial.snappy:snappy-java:1.1.1.6'
         }
     }
-    shaded
+    shadow
     {
         resolutionStrategy
         {
@@ -76,13 +65,7 @@ configurations
 
             // Snappy 1.1.1.6 is the one that has the proper .so libs.
             // https://github.com/xerial/snappy-java/issues/6
-            force 'org.xerial.snappy:snappy-java:1.1.1.6'
         }
-        // Hadoop and Spark are way too fat.
-        exclude group: 'org.apache.hadoop'
-        exclude group: 'org.apache.spark'
-        exclude group: 'org.scala-lang'
-        exclude group: 'org.slf4j'
     }
     runtime
     archives
@@ -103,7 +86,7 @@ dependencies
     checkstyle packages.checkstyle
     checkstyle packages.atlas_checkstyle
 
-    shaded project.configurations.getByName('compile')
+    shadow project.configurations.getByName('compile')
 
     // Support Junit 5 tests
     testImplementation packages.junit.api
@@ -127,28 +110,16 @@ task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
 }
 
-task shaded(type: Jar) {
-    baseName = project.name
-    classifier = 'shaded'
-    from {
-        configurations.shaded.collect {
-            it.isDirectory() ? it : zipTree(it).matching {
-                exclude {
-                    it.path.contains('META-INF') && (it.path.endsWith('.SF') || it.path.endsWith('.DSA') || it.path.endsWith('.RSA'))
-                }
-            }
-        }
-    }
-    with jar
-    zip64 = true
-}
+import com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer
+import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
 
 shadowJar {
     baseName = project.name
-    mergeServiceFiles()
-    transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+    configurations = [project.configurations.shadow]
+    transform(AppendingTransformer) {
         resource = 'reference.conf'
     }
+    transform(ServiceFileTransformer)
     zip64 = true
 }
 
@@ -156,7 +127,7 @@ artifacts
 {
     archives javadocJar
     archives sourcesJar
-    archives shaded
+    archives shadowJar
 }
 
 /*

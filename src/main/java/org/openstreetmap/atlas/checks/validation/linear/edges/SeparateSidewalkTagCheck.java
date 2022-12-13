@@ -30,8 +30,7 @@ import org.openstreetmap.atlas.utilities.configuration.Configuration;
 import org.openstreetmap.atlas.utilities.scalars.Angle;
 import org.openstreetmap.atlas.utilities.scalars.Distance;
 
-import avro.shaded.com.google.common.collect.Range;
-import avro.shaded.com.google.common.collect.Ranges;
+import com.google.common.collect.Range;
 
 /**
  * This check flags when sidewalk=* tags are used on a highway that any separately mapped
@@ -49,7 +48,7 @@ public class SeparateSidewalkTagCheck extends BaseCheck<Long>
     // default edge length (meters)
     private static final Double EDGE_LENGTH_DEFAULT = 20.0;
     // heading degree range to ensure that separate sidewalk is more or less parallel to the highway
-    private static final Range<Double> HEADING_DEGREE_RANGE = Ranges.closed(-20.0, 20.0);
+    private static final Range<Double> HEADING_DEGREE_RANGE = Range.closed(-20.0, 20.0);
     private static final String MAXIMUM_HIGHWAY_DEFAULT = HighwayTag.PRIMARY.toString();
     // alternative separate sidewalk mapping tag value:
     // https://wiki.openstreetmap.org/wiki/Key:sidewalk:left
